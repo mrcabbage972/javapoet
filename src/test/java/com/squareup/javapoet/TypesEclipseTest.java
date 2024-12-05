@@ -36,7 +36,7 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 
 import org.eclipse.jdt.internal.compiler.tool.EclipseCompiler;
-import org.junit.Rule;
+import org.junit.Before;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
@@ -47,6 +47,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 @RunWith(JUnit4.class)
+@SuppressWarnings("unchecked")  // Because of the way JUnit4 executes tests.
 public final class TypesEclipseTest extends AbstractTypesTest {
   /**
    * A {@link JUnit4} {@link Rule} that executes tests such that a instances of {@link Elements} and
@@ -60,6 +61,10 @@ public final class TypesEclipseTest extends AbstractTypesTest {
   public static final class CompilationRule implements TestRule {
     private Elements elements;
     private Types types;
+
+    CompilationRule() {
+      // No-op constructor to allow creating a rule instance without immediately executing.
+    }
 
     @Override
     public Statement apply(final Statement base, Description description) {
@@ -148,6 +153,10 @@ public final class TypesEclipseTest extends AbstractTypesTest {
 
   @Override
   protected Elements getElements() {
+    // Eclipse's compiler doesn't support compilation in multiple rounds without re-initializing,
+    // so we can't safely invoke this method during the CompilationRule.
+    // This is the safe place to call a method that has access to Elements without triggering this
+    // fatal EclipseCompiler error: https://github.com/square/javapoet/issues/672
     return compilation.getElements();
   }
 
